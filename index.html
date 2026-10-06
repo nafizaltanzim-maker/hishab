@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hishab – Expense Tracker</title>
+<style>
+:root{--bg:#f4f7f6;--card:#fff;--tx:#14201e;--mut:#667085;--pri:#0f766e;--red:#dc2626;--grn:#16a34a;--bd:#e2e8e6;--amb:#d97706;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1514;--card:#17201f;--tx:#eef3f2;--mut:#9aa8a5;--pri:#2dd4bf;--bd:#27332f}}
+:root[data-theme="dark"]{--bg:#0e1514;--card:#17201f;--tx:#eef3f2;--mut:#9aa8a5;--pri:#2dd4bf;--bd:#27332f}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding-bottom:76px}
+main{max-width:560px;margin:0 auto;padding:14px}
+.brand{display:flex;align-items:center;gap:10px;margin:4px 0 12px}
+.logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#0f766e,#14b8a6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700}
+.brand h1{font-size:20px;margin:0;line-height:1.1}.brand small{color:var(--mut)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:12px}
+.row{display:flex;gap:8px}.row>*{flex:1;min-width:0}
+.sum div{text-align:center}.sum small{color:var(--mut);display:block;font-size:12px}.sum b{font-size:16px}
+input,select,button,textarea{font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:10px;width:100%}
+button{background:var(--pri);color:#fff;border:0;font-weight:600;cursor:pointer}
+button.ghost{background:var(--bg);color:var(--tx);border:1px solid var(--bd)}
+.seg button{background:var(--bg);color:var(--mut);border:1px solid var(--bd)}
+.seg button.on{background:var(--pri);color:#fff;border-color:var(--pri)}
+.item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bd)}
+.item:last-child{border:0}.item .m{flex:1;min-width:0}.item .m small{color:var(--mut);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item .x{width:34px;flex:none;padding:6px;background:none;color:var(--mut);border:0}
+.neg{color:var(--red)}.pos{color:var(--grn)}
+.bar{height:10px;background:var(--bd);border-radius:6px;overflow:hidden;margin:5px 0 10px}.bar i{display:block;height:100%;background:var(--pri)}
+.cols{display:flex;align-items:flex-end;gap:6px;height:130px;margin-top:8px}
+.cols div{flex:1;text-align:center;font-size:11px;color:var(--mut);display:flex;flex-direction:column;justify-content:flex-end;height:100%}
+.cols i{display:block;background:var(--pri);border-radius:6px 6px 0 0;min-height:2px}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav button{background:none;color:var(--mut);border:0;border-radius:0;padding:14px 4px}nav button.on{color:var(--pri)}
+.sec{display:none}.sec.on{display:block}
+label{font-size:12px;color:var(--mut);display:block;margin:8px 0 4px}
+.empty{color:var(--mut);text-align:center;padding:16px}
+</style></head><body><main>
+<div class="brand"><div class="logo">৳</div><div><h1>Hishab</h1><small>Know where your money goes</small></div></div>
+<input type="month" id="mon">
+
+<section class="sec on" id="home">
+ <div class="card sum row" style="margin-top:12px">
+  <div><small>Income</small><b class="pos" id="sInc"></b></div>
+  <div><small>Expense</small><b class="neg" id="sExp"></b></div>
+  <div><small>Balance</small><b id="sBal"></b></div>
+ </div>
+ <div class="card">
+  <div class="row seg"><button id="tExp" class="on">Expense</button><button id="tInc">Income</button></div>
+  <label>Amount (৳)</label><input id="amt" type="number" inputmode="decimal" min="0" placeholder="0">
+  <div class="row"><div><label>Category</label><select id="cat"></select></div><div><label>Date</label><input id="dt" type="date"></div></div>
+  <label>Note (optional)</label><input id="note" maxlength="60" placeholder="e.g. Lunch">
+  <div style="margin-top:12px"><button id="add">Add</button></div>
+ </div>
+ <div class="card" id="list"></div>
+</section>
+
+<section class="sec" id="chart">
+ <div class="card"><b>Spending by category</b><div id="catBars" style="margin-top:10px"></div></div>
+ <div class="card"><b>Last 6 months</b><div class="cols" id="cols"></div></div>
+ <div class="card"><b>Report</b><div id="rep" style="margin-top:8px;line-height:1.7"></div>
+  <div class="row" style="margin-top:10px"><button class="ghost" id="csvBtn">Copy CSV</button></div>
+  <textarea id="csv" rows="5" style="display:none;margin-top:10px" readonly></textarea></div>
+</section>
+
+<section class="sec" id="budget">
+ <div class="card"><b>Budget for this month</b>
+  <label>Monthly limit (৳)</label><input id="bud" type="number" inputmode="decimal" min="0" placeholder="e.g. 15000">
+  <div style="margin-top:12px"><button id="saveBud">Save</button></div></div>
+ <div class="card" id="budInfo"></div>
+</section>
+</main>
+<nav><button class="on" data-t="home">🏠 Home</button><button data-t="chart">📊 Charts</button><button data-t="budget">🎯 Budget</button></nav>
+
+<script>
+const EC=["Food","Transport","Rent","Study","Shopping","Bills","Health","Entertainment","Other"];
+const IC=["Salary / Tuition","Gift","Other income"];
+let S={tx:[],bud:{}},type="exp";
+try{const r=localStorage.getItem("hishabApp1");if(r)S=JSON.parse(r)}catch(e){}
+const $=id=>document.getElementById(id);
+const save=()=>{try{localStorage.setItem("hishabApp1",JSON.stringify(S))}catch(e){}};
+const fmt=n=>"৳"+Math.round(n).toLocaleString("en-US");
+const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+$("mon").value=today().slice(0,7);$("dt").value=today();
+const mon=()=>$("mon").value||today().slice(0,7);
+const inM=m=>S.tx.filter(t=>t.d.startsWith(m));
+const sum=(a,ty)=>a.filter(t=>t.ty===ty).reduce((s,t)=>s+t.a,0);
+
+function fillCats(){$("cat").innerHTML=(type==="exp"?EC:IC).map(c=>`<option>${c}</option>`).join("")}
+function setType(t){type=t;$("tExp").classList.toggle("on",t==="exp");$("tInc").classList.toggle("on",t==="inc");fillCats()}
+$("tExp").onclick=()=>setType("exp");$("tInc").onclick=()=>setType("inc");
+
+$("add").onclick=()=>{
+ const a=parseFloat($("amt").value);
+ if(!(a>0)){$("amt").focus();return}
+ S.tx.push({id:Date.now(),ty:type,a,c:$("cat").value,d:$("dt").value||today(),n:$("note").value.trim()});
+ $("amt").value="";$("note").value="";save();render();
+};
+function del(id){S.tx=S.tx.filter(t=>t.id!==id);save();render()}
+
+function render(){
+ const m=mon(),a=inM(m),inc=sum(a,"inc"),exp=sum(a,"exp");
+ $("sInc").textContent=fmt(inc);$("sExp").textContent=fmt(exp);
+ const b=inc-exp;$("sBal").textContent=fmt(b);$("sBal").className=b<0?"neg":"pos";
+ const L=$("list");L.innerHTML="";
+ if(!a.length){L.innerHTML='<div class="empty">No transactions this month</div>'}
+ a.slice().sort((x,y)=>y.d.localeCompare(x.d)||y.id-x.id).forEach(t=>{
+  const el=document.createElement("div");el.className="item";
+  const mid=document.createElement("div");mid.className="m";
+  mid.innerHTML="<b></b><small></small>";
+  mid.firstChild.textContent=t.c;mid.lastChild.textContent=t.d+(t.n?" · "+t.n:"");
+  const amt=document.createElement("b");amt.className=t.ty==="exp"?"neg":"pos";amt.textContent=(t.ty==="exp"?"−":"+")+fmt(t.a);
+  const x=document.createElement("button");x.className="x";x.textContent="✕";x.setAttribute("aria-label","Delete");x.onclick=()=>del(t.id);
+  el.append(mid,amt,x);L.appendChild(el);
+ });
+ const by={};a.filter(t=>t.ty==="exp").forEach(t=>by[t.c]=(by[t.c]||0)+t.a);
+ const ent=Object.entries(by).sort((x,y)=>y[1]-x[1]);
+ $("catBars").innerHTML=ent.length?ent.map(([c,v])=>`<div style="display:flex;justify-content:space-between"><span>${c}</span><span>${fmt(v)} (${Math.round(v/exp*100)}%)</span></div><div class="bar"><i style="width:${v/exp*100}%"></i></div>`).join(""):'<div class="empty">No expenses yet</div>';
+ const ms=[],[y,mm]=m.split("-").map(Number);
+ for(let i=5;i>=0;i--){const d=new Date(y,mm-1-i,1);ms.push(d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"))}
+ const vals=ms.map(k=>sum(inM(k),"exp")),mx=Math.max(...vals,1);
+ $("cols").innerHTML=ms.map((k,i)=>`<div><span>${vals[i]?Math.round(vals[i]).toLocaleString("en-US"):""}</span><i style="height:${vals[i]/mx*85}%"></i>${new Date(+k.slice(0,4),+k.slice(5)-1,1).toLocaleString("en-US",{month:"short"})}</div>`).join("");
+ const days=new Date(y,mm,0).getDate(),cnt=a.filter(t=>t.ty==="exp").length;
+ $("rep").innerHTML=`Total spent: <b>${fmt(exp)}</b><br>Transactions: <b>${cnt}</b><br>Daily average: <b>${fmt(exp/days)}</b><br>Top category: <b>${ent[0]?ent[0][0]+" ("+fmt(ent[0][1])+")":"—"}</b><br>Savings rate: <b>${inc?Math.round((inc-exp)/inc*100)+"%":"—"}</b>`;
+ const bd=S.bud[m]||0;$("bud").value=bd||"";
+ if(!bd){$("budInfo").innerHTML='<div class="empty">No budget set for this month</div>'}
+ else{
+  const p=exp/bd*100,col=p>=100?"var(--red)":p>=80?"var(--amb)":"var(--pri)";
+  const isNow=m===today().slice(0,7),left=days-(new Date().getDate())+1;
+  $("budInfo").innerHTML=`<div style="display:flex;justify-content:space-between"><span>Spent ${fmt(exp)}</span><span>Limit ${fmt(bd)}</span></div>
+  <div class="bar" style="height:14px"><i style="width:${Math.min(p,100)}%;background:${col}"></i></div>
+  <div style="color:${col};font-weight:600">${p>=100?"⚠️ Over budget by "+fmt(exp-bd):p>=80?"⚠️ Over 80% used, "+fmt(bd-exp)+" left":"✅ "+fmt(bd-exp)+" left"} (${Math.round(p)}%)</div>`+
+  (isNow&&bd>exp?`<div style="color:var(--mut);margin-top:6px">You can spend up to ${fmt((bd-exp)/left)} per day for the remaining ${left} day${left===1?"":"s"}</div>`:"");
+ }
+}
+$("saveBud").onclick=()=>{const v=parseFloat($("bud").value);if(v>0)S.bud[mon()]=v;else delete S.bud[mon()];save();render()};
+$("mon").onchange=render;
+$("csvBtn").onclick=async()=>{
+ const rows=[["Date","Type","Category","Amount","Note"]].concat(inM(mon()).sort((a,b)=>a.d.localeCompare(b.d)).map(t=>[t.d,t.ty==="exp"?"Expense":"Income",t.c,t.a,t.n]));
+ const csv="\uFEFF"+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join("\n");
+ const ta=$("csv");ta.style.display="block";ta.value=csv;ta.select();
+ try{await navigator.clipboard.writeText(csv);$("csvBtn").textContent="✅ Copied"}catch(e){$("csvBtn").textContent="Select the text and copy"}
+ setTimeout(()=>$("csvBtn").textContent="Copy CSV",2500);
+};
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
+ document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("on",x===b));
+ document.querySelectorAll(".sec").forEach(s=>s.classList.toggle("on",s.id===b.dataset.t));
+});
+fillCats();render();
+</script></body></html>
